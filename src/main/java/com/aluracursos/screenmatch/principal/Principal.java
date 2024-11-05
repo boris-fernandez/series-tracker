@@ -1,9 +1,6 @@
 package com.aluracursos.screenmatch.principal;
 
-import com.aluracursos.screenmatch.model.DatosSerie;
-import com.aluracursos.screenmatch.model.DatosTemporadas;
-import com.aluracursos.screenmatch.model.Episodio;
-import com.aluracursos.screenmatch.model.Serie;
+import com.aluracursos.screenmatch.model.*;
 import com.aluracursos.screenmatch.repository.SerieRepository;
 import com.aluracursos.screenmatch.service.ConsumoAPI;
 import com.aluracursos.screenmatch.service.ConvierteDatos;
@@ -38,7 +35,11 @@ public class Principal {
                     1 - Buscar series 
                     2 - Buscar episodios
                     3 - Mostrar series buscadas
-                                  
+                    4 - Buscar series por titulo
+                    5 - Top 5 mejores series
+                    6 - Buscar series por categoria 
+                    7 - Buscar serie por numero de temporadas y evaluacion              
+                    
                     0 - Salir
                     """;
             System.out.println(menu);
@@ -55,6 +56,17 @@ public class Principal {
                 case 3:
                     mostrarSeriesBuscadas();
                     break;
+                case 4:
+                    buscarSeriesPorTitulo();
+                    break;
+                case 5:
+                    buscarTop5Serries();
+                    break;
+                case 6:
+                    buscarSeriePorCategoria();
+                    break;
+                case 7:
+                    buscarSeriePorNumerotemporadasYEvaluacion();
                 case 0:
                     System.out.println("Cerrando la aplicación...");
                     break;
@@ -116,6 +128,46 @@ public class Principal {
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
                 .forEach(System.out::println);
+    }
+    private void buscarSeriesPorTitulo() {
+        System.out.println("Escribe el nombre de la serie que deseas buscar");
+        String nombreSerie = teclado.nextLine();
+        Optional<Serie> serieBuscada = repositorio.findByTituloContainsIgnoreCase(nombreSerie);
+        if(serieBuscada.isPresent()){
+            System.out.println("La serie buscada es: " + serieBuscada.get());
+        }else {
+            System.out.println("Serie no encontrada...");
+        }
+    }
+    private void buscarTop5Serries() {
+        List<Serie> topSeries = repositorio.findTop5ByOrderByEvaluacionDesc();
+        topSeries.forEach(s ->
+                System.out.println("Serie: " + s.getTitulo() + ", Evaluacion: " + s.getEvaluacion()));
+    }
+    private void buscarSeriePorCategoria() {
+        System.out.println("Escriba el genero/categoria de la serie que quieres buscar");
+        String genero = teclado.nextLine();
+        var categoria = Categoria.fromEspanol(genero);
+        List<Serie> seriesPorCategoria = repositorio.findByGenero(categoria);
+        System.out.println("Las series de la categoria " + genero);
+        seriesPorCategoria.forEach(System.out::println);
+    }
+
+    private void buscarSeriePorNumerotemporadasYEvaluacion() {
+        System.out.println("Ingrese el numero de temporadas que tenga la serie");
+        int numeroTemporadas = teclado.nextInt();
+        System.out.println("Ingresa la evaluacion de la serie q deseas buscar ");
+        Double evaluacion = teclado.nextDouble();
+        Optional<Serie> seriePorTotalTemporadasYEvaluacion = repositorio.findBytotalTemporadasAndEvaluacion(numeroTemporadas, evaluacion);
+        if(seriePorTotalTemporadasYEvaluacion.isPresent()){
+            System.out.println("Las series que contienen esa caracteristicas son: \n" +
+                    "Titulo: " + seriePorTotalTemporadasYEvaluacion.get().getTitulo() + "\n" +
+                    "Total de temporadas: " + seriePorTotalTemporadasYEvaluacion.get().getTotalTemporadas() + "\n" +
+                    "Evaluacion: " + seriePorTotalTemporadasYEvaluacion.get().getEvaluacion() + "\n" +
+                    "Genero: " + seriePorTotalTemporadasYEvaluacion.get().getGenero() + "\n\n");
+        }else{
+            System.out.println("No se econtro ninguna serie que contenga esas caracteristicas");
+        }
     }
 
 }
